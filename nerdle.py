@@ -108,17 +108,21 @@ def get_group_mean_sd_count(data, name):
     return sample_std, sample_mean, sample_count
 
 
-def create_pdf(pdf_table, name):
+def create_pdf(pdf_table, name, row_n, col_n, row_labels):
     fig, ax = plt.subplots(figsize=(12, 4))
     ax.axis("tight")
     ax.axis("off")
     # pdf_table = nerdle_output
+
     the_table = ax.table(
         cellText=pdf_table.values,
+        rowLabels=row_labels,
         colLabels=pdf_table.columns,
-        # colColours=["b"],
+        rowColours=["palegreen"] * row_n,
+        colColours=["palegreen"] * col_n,
         loc="center",
     )
+    ax.set_title("Nerdle Stats", fontweight="bold")
     pp = PdfPages(myPath + name)
     pp.savefig(fig, bbox_inches="tight")
     pp.close()
@@ -188,9 +192,21 @@ nerdle_output_totals.to_csv(myPath + "nerdle_output_turkheimer.csv")
 nerdle_output_totals.to_excel(myPath + "nerdle_output_turkheimer.xlsx", index=False)
 
 pdf_table = nerdle_output
-create_pdf(pdf_table, "nerdlestats1.pdf")
+row_n, col_n = len(list_names) + 1, len(list_names)
+row_labels = list_names
+create_pdf(pdf_table, "nerdlestats1.pdf", row_n, col_n, row_labels)
 
-pdf_table = nerdle_output_totals
-create_pdf(pdf_table, "nerdlestats2.pdf")
+pdf_table = nerdle_output_totals.drop(["Stat"], axis=1)
+row_n, col_n = 8, len(list_names) + 1
+row_labels = [
+    "total played",
+    "mean score",
+    "st. dev.",
+    "group total played",
+    "group mean",
+    "group st. dev.",
+    "p-value",
+]
+create_pdf(pdf_table, "nerdlestats2.pdf", row_n, col_n, row_labels)
 
 print("All done")
