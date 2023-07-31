@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
 
-myPath = "/Users/david/Dropbox/Computing/Linux/Python/python_larder/"
-myFile = "nerdle.py"
+myPath = "/Users/david/Dropbox/Computing/Linux/Python/nerdle/"
+# myFile = "nerdle.py"
 myCSV_File = "nerdle.csv"
 
 
@@ -33,23 +33,6 @@ def make_df(data, name1, name2):
     print("D-stat = " + str(d_stat))
 
     return d_stat
-
-
-### convert to numpy arrays (not really needed now)
-### data1 = df_data["cum_perc_A"].to_numpy()
-### data2 = df_data["cum_perc_B"].to_numpy()
-### print(data1, data2)
-
-### find statistics REDUNDANT
-###  myStats = stats.ks_2samp(data1, data2)
-###  print(myStats)
-
-
-def make_raw_data(data, name):
-    ### create raw data from frequency distibution ###
-    raw_data = np.repeat(data["Bin"], data[name]).to_numpy()
-
-    return raw_data
 
 
 def get_KSstats(data, name1, name2):
@@ -90,6 +73,13 @@ def create_output(list_names):
     return nerdle_output
 
 
+def make_raw_data(data, name):
+    ### create raw data from frequency distibution ###
+    raw_data = np.repeat(data["Bin"], data[name]).to_numpy()
+
+    return raw_data
+
+
 def get_totals_raw(data, name):
     data_totals = data.drop(["Bin"], axis=1)
     data_totals["total"] = data_totals.sum(axis=1, numeric_only=True)
@@ -102,8 +92,16 @@ def get_totals_raw(data, name):
     return raw_data
 
 
-def get_mean_sd(data, name):
+def get_mean_sd_count(data, name):
     raw_data = make_raw_data(data, name)
+    sample_std = raw_data.std()
+    sample_mean = raw_data.mean()
+    sample_count = len(raw_data)
+    return sample_std, sample_mean, sample_count
+
+
+def get_group_mean_sd_count(data, name):
+    raw_data = get_totals_raw(data, name)
     sample_std = raw_data.std()
     sample_mean = raw_data.mean()
     sample_count = len(raw_data)
@@ -137,18 +135,10 @@ if "Bin" in list_names:
     except:
         pass
 
-### get names
-### name1 = list_names[0]
-###
-### for name2 in list_names[1:]:
-###     get_KSstats(data, name1, name2)
-
-
-### myStats3 = stats.kstest(raw_data1, raw_data2)
-### print(myStats3)
-
+### CREATE OUPUT FILE
 nerdle_output = create_output(list_names)
 
+### POPULATE PAIRWISE OUTPUT FILE WITH DATA
 for name1 in list_names:
     for name2 in list_names:
         if name1 != name2:
@@ -157,21 +147,38 @@ for name1 in list_names:
             # nerdle_output.at[name1, name1] = 1
 print(nerdle_output)
 
+### SAVE CSV AND EXCEL FILES
 nerdle_output.to_csv(myPath + "nerdle_output_pairwise.csv")
 nerdle_output.to_excel(myPath + "nerdle_output_pairwise.xlsx")
 
+### CREATE GROUP MEAN DF
 nerdle_output_totals = pd.DataFrame(columns=list_names)
 nerdle_output_totals.insert(
-    0, "Stat", ["total played", "mean score", "st. dev.", "p-value"]
+    0,
+    "Stat",
+    [
+        "total played",
+        "mean score",
+        "st. dev.",
+        "group total played",
+        "group mean",
+        "group st. dev.",
+        "p-value",
+    ],
 )
 
-for name1 in list_names:
-    pVal = get_KSstats_totals(data, name1)
-    st_dev, mean, total = get_mean_sd(data, name1)
-    nerdle_output_totals.at[0, name1] = total
-    nerdle_output_totals.at[1, name1] = round(mean, 4)
-    nerdle_output_totals.at[2, name1] = round(st_dev, 4)
-    nerdle_output_totals.at[3, name1] = round(pVal, 4)
+### POPULATE GROUP MEAN COMPARISON OUTPUT FILE
+for name in list_names:
+    pVal = get_KSstats_totals(data, name)
+    st_dev, mean, total = get_mean_sd_count(data, name)
+    st_dev_group, mean_group, total_group = get_group_mean_sd_count(data, name)
+    nerdle_output_totals.at[0, name] = total
+    nerdle_output_totals.at[1, name] = round(mean, 4)
+    nerdle_output_totals.at[2, name] = round(st_dev, 4)
+    nerdle_output_totals.at[3, name] = total_group
+    nerdle_output_totals.at[4, name] = round(mean_group, 4)
+    nerdle_output_totals.at[5, name] = round(st_dev_group, 4)
+    nerdle_output_totals.at[6, name] = round(pVal, 4)
 
 #  could put in here mean for all others
 
