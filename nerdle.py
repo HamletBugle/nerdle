@@ -109,21 +109,26 @@ def get_group_mean_sd_count(data, name):
     return sample_std, sample_mean, sample_count
 
 
-def create_pdf(pdf_table, name, row_n, col_n, row_labels):
+def create_pdf(pdf_table, name, row_n, col_n, row_labels, title, font_colour):
     fig, ax = plt.subplots(figsize=(12, 4))
     ax.axis("tight")
     ax.axis("off")
+    plt.rcParams["font.size"] = 8
+    plt.rcParams["font.family"] = "Gill Sans MT"
     # pdf_table = nerdle_output
 
     the_table = ax.table(
         cellText=pdf_table.values,
+        cellLoc="right",
         rowLabels=row_labels,
         colLabels=pdf_table.columns,
-        rowColours=["palegreen"] * row_n,
-        colColours=["palegreen"] * col_n,
+        rowColours=[font_colour] * row_n,
+        rowLoc="right",
+        colColours=[font_colour] * col_n,
+        colLoc="center",
         loc="center",
     )
-    ax.set_title("Nerdle Stats", fontweight="bold")
+    ax.set_title(title, fontweight="normal", color="b")
     pp = PdfPages(myPath + name)
     pp.savefig(fig, bbox_inches="tight")
     pp.close()
@@ -148,7 +153,7 @@ for name1 in list_names:
     for name2 in list_names:
         if name1 != name2:
             pVal = get_KSstats(data, name1, name2)
-            nerdle_output.at[name1, name2] = pVal
+            nerdle_output.at[name1, name2] = round(pVal, 4)
             # nerdle_output.at[name1, name1] = 1
 print(nerdle_output)
 
@@ -202,7 +207,16 @@ nerdle_output_totals.to_excel(
 pdf_table = nerdle_output
 row_n, col_n = len(list_names) + 1, len(list_names)
 row_labels = list_names
-create_pdf(pdf_table, "nerdlestats1_" + fileDateID + ".pdf", row_n, col_n, row_labels)
+title = "Nerdle Statistics: pairwise comparisons p-value"
+create_pdf(
+    pdf_table,
+    "nerdlestats1_" + fileDateID + ".pdf",
+    row_n,
+    col_n,
+    row_labels,
+    title,
+    font_colour="skyblue",
+)
 
 pdf_table = nerdle_output_totals.drop(["Stat"], axis=1)
 row_n, col_n = 8, len(list_names) + 1
@@ -215,6 +229,17 @@ row_labels = [
     "group st. dev.",
     "p-value",
 ]
-create_pdf(pdf_table, "nerdlestats2_" + fileDateID + ".pdf", row_n, col_n, row_labels)
+title = (
+    "Nerdle Statistics: players compared with grouped statistics for all other players"
+)
+create_pdf(
+    pdf_table,
+    "nerdlestats2_" + fileDateID + ".pdf",
+    row_n,
+    col_n,
+    row_labels,
+    title,
+    font_colour="beige",
+)
 
 print("All done")
