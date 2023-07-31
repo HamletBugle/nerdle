@@ -4,6 +4,7 @@ from scipy import stats
 from fpdf import FPDF
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
+from datetime import datetime
 
 
 myPath = "/Users/david/Dropbox/Computing/Linux/Python/nerdle/"
@@ -30,7 +31,7 @@ def make_df(data, name1, name2):
     # print(df_data)
 
     d_stat = df_data["diff"].max()
-    print("D-stat = " + str(d_stat))
+    # print("D-stat = " + str(d_stat))
 
     return d_stat
 
@@ -69,7 +70,7 @@ def create_output(list_names):
     nerdle_output = pd.DataFrame(columns=list_names)
     nerdle_output.insert(0, "names", list_names)
     nerdle_output.set_index("names", inplace=True)
-    print(nerdle_output)
+    # print(nerdle_output)
     return nerdle_output
 
 
@@ -83,12 +84,12 @@ def make_raw_data(data, name):
 def get_totals_raw(data, name):
     data_totals = data.drop(["Bin"], axis=1)
     data_totals["total"] = data_totals.sum(axis=1, numeric_only=True)
-    print(data_totals)
+    # print(data_totals)
     data_totals["total2"] = data_totals["total"] - data_totals[name]
     print(data_totals)
 
     raw_data = np.repeat(data["Bin"], data_totals["total2"]).to_numpy()
-    print(raw_data)
+    # print(raw_data)
     return raw_data
 
 
@@ -152,8 +153,12 @@ for name1 in list_names:
 print(nerdle_output)
 
 ### SAVE CSV AND EXCEL FILES
+
+now = datetime.now()  # current date and time
+fileDateID = now.strftime("%Y%m%d")
+
 nerdle_output.to_csv(myPath + "nerdle_output_pairwise.csv")
-nerdle_output.to_excel(myPath + "nerdle_output_pairwise.xlsx")
+nerdle_output.to_excel(myPath + "nerdle_output_pairwise_" + fileDateID + ".xlsx")
 
 ### CREATE GROUP MEAN DF
 nerdle_output_totals = pd.DataFrame(columns=list_names)
@@ -188,13 +193,16 @@ for name in list_names:
 
 print(nerdle_output_totals)
 
+
 nerdle_output_totals.to_csv(myPath + "nerdle_output_turkheimer.csv")
-nerdle_output_totals.to_excel(myPath + "nerdle_output_turkheimer.xlsx", index=False)
+nerdle_output_totals.to_excel(
+    myPath + "nerdle_output_turkheimer_" + fileDateID + ".xlsx", index=False
+)
 
 pdf_table = nerdle_output
 row_n, col_n = len(list_names) + 1, len(list_names)
 row_labels = list_names
-create_pdf(pdf_table, "nerdlestats1.pdf", row_n, col_n, row_labels)
+create_pdf(pdf_table, "nerdlestats1_" + fileDateID + ".pdf", row_n, col_n, row_labels)
 
 pdf_table = nerdle_output_totals.drop(["Stat"], axis=1)
 row_n, col_n = 8, len(list_names) + 1
@@ -207,6 +215,6 @@ row_labels = [
     "group st. dev.",
     "p-value",
 ]
-create_pdf(pdf_table, "nerdlestats2.pdf", row_n, col_n, row_labels)
+create_pdf(pdf_table, "nerdlestats2_" + fileDateID + ".pdf", row_n, col_n, row_labels)
 
 print("All done")
