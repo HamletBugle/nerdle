@@ -9,7 +9,7 @@ from datetime import datetime
 
 myPath = "/Users/david/Dropbox/Computing/Linux/Python/nerdle/"
 # myFile = "nerdle.py"
-myCSV_File = "nerdle.csv"
+myCSV_File = "nerdle_input.csv"
 
 
 def make_df(data, name1, name2):
@@ -155,6 +155,9 @@ for name1 in list_names:
             pVal = get_KSstats(data, name1, name2)
             nerdle_output.at[name1, name2] = round(pVal, 4)
             # nerdle_output.at[name1, name1] = 1
+        if name1 == name2:
+            nerdle_output.at[name1, name2] = ""
+
 print(nerdle_output)
 
 ### SAVE CSV AND EXCEL FILES
